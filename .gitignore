@@ -1,0 +1,20 @@
+# Secrets & local config
+.env
+
+# Vector DB persistence + cached data
+data/
+
+# Personal Google Takeout exports — never commit your watch history
+*.zip
+takeout*/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# OS / editor noise
+.DS_Store
+.idea/
+.vscode/

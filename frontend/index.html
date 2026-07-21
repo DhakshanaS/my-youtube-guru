@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>My YouTube Guru</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="app">
+    <!-- ── Index rail ─────────────────────────────────────────────── -->
+    <aside class="rail">
+      <div class="brand">
+        <span class="brand__mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="22" height="22"><rect x="1.5" y="4.5" width="21" height="15" rx="4.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M10 9.2l5 2.8-5 2.8z" fill="currentColor"/></svg>
+        </span>
+        <span class="brand__name">My YouTube&nbsp;Guru</span>
+      </div>
+
+      <nav class="nav" aria-label="Sections">
+        <button class="nav__item is-active" data-tab="chat">
+          <span class="nav__label">Ask</span>
+          <span class="nav__hint">Question your history</span>
+        </button>
+        <button class="nav__item" data-tab="knowledge">
+          <span class="nav__label">Knowledge base</span>
+          <span class="nav__hint">What you've watched</span>
+        </button>
+        <button class="nav__item" data-tab="grounding">
+          <span class="nav__label">Grounding</span>
+          <span class="nav__hint">Answer audit trail</span>
+        </button>
+        <button class="nav__item" data-tab="upload">
+          <span class="nav__label">Add data</span>
+          <span class="nav__hint">Import Takeout</span>
+        </button>
+        <button class="nav__item" data-tab="settings">
+          <span class="nav__label">Settings</span>
+          <span class="nav__hint">API key</span>
+        </button>
+      </nav>
+
+      <div class="rail__chats">
+        <div class="rail__chats-head">
+          <span class="rail__chats-title">Chats</span>
+          <button class="btn btn--ghost btn--sm" id="newChat" type="button">+ New</button>
+        </div>
+        <div class="sessions__list" id="sessionsList"></div>
+      </div>
+
+      <div class="rail__foot">
+        <span class="dot" id="statusDot"></span>
+        <span id="statusText" class="mono">checking…</span>
+      </div>
+    </aside>
+
+    <!-- ── Working panel ──────────────────────────────────────────── -->
+    <main class="panel">
+
+      <!-- Setup hint (shown when key missing or KB empty) -->
+      <div class="hint" id="setupHint" hidden></div>
+
+      <!-- ASK / CHAT -->
+      <section class="view is-active" id="view-chat">
+        <header class="view__head">
+          <h1 class="view__title">Ask your watch history</h1>
+          <p class="view__sub">Answers are grounded in the transcripts of videos you've actually watched. When nothing matches, this app tells you — it won't quietly make things up.</p>
+        </header>
+
+        <div class="chat" id="chatLog">
+          <div class="empty" id="chatEmpty">
+            <p class="empty__title">Nothing asked yet.</p>
+            <p class="empty__body">Try something you know you've watched about.</p>
+            <div class="examples" id="examples">
+              <button class="chip">What have I learned about vector databases?</button>
+              <button class="chip">Summarize what I've watched on productivity.</button>
+              <button class="chip">Which videos covered prompt engineering?</button>
+            </div>
+          </div>
+        </div>
+
+        <form class="composer" id="askForm" autocomplete="off">
+          <input class="composer__input" id="askInput" type="text"
+                 placeholder="Ask about the videos you've watched…" />
+          <button class="btn btn--primary" id="askBtn" type="submit">Ask</button>
+        </form>
+      </section>
+
+      <!-- KNOWLEDGE BASE -->
+      <section class="view" id="view-knowledge">
+        <header class="view__head">
+          <h1 class="view__title">Your knowledge base</h1>
+          <p class="view__sub">Every watched video, categorised by an LLM and indexed for semantic search.</p>
+        </header>
+
+        <div class="kb">
+          <div class="kb__summary">
+            <div class="stat">
+              <span class="stat__num mono" id="kbTotal">—</span>
+              <span class="stat__label">videos indexed</span>
+            </div>
+            <div class="stat">
+              <span class="stat__num mono" id="kbCats">—</span>
+              <span class="stat__label">categories</span>
+            </div>
+            <button class="btn btn--ghost" id="kbRefresh" type="button">Refresh</button>
+          </div>
+
+          <div class="kb__body">
+            <div class="card kb__chartcard">
+              <div class="card__title">Videos by category</div>
+              <div class="chartwrap"><canvas id="kbChart"></canvas></div>
+              <p class="kb__hint mono" id="kbChartHint">Click a slice to filter the list →</p>
+            </div>
+
+            <div class="card kb__listcard">
+              <div class="card__title">
+                <span id="kbListTitle">All videos</span>
+                <button class="link" id="kbClearFilter" type="button" hidden>clear filter</button>
+              </div>
+              <div class="vlist" id="kbList"></div>
+            </div>
+          </div>
+
+          <div class="empty" id="kbEmpty" hidden>
+            <p class="empty__title">Your knowledge base is empty.</p>
+            <p class="empty__body">Import your YouTube history from the <b>Add data</b> tab to get started.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- GROUNDING -->
+      <section class="view" id="view-grounding">
+        <header class="view__head">
+          <h1 class="view__title">Grounding &amp; evaluation</h1>
+          <p class="view__sub">An audit trail of every answer — whether it stayed grounded in your videos, which sources it cited, and how confident retrieval was. Controlling hallucination is the core of this project; this page is how it's verified.</p>
+        </header>
+
+        <div class="eval">
+          <div class="result__grid" id="evalStats"></div>
+
+          <div class="eval__body">
+            <div class="card">
+              <div class="card__title">
+                <span>Recent answers</span>
+                <button class="btn btn--ghost btn--sm" id="evalRefresh" type="button">Refresh</button>
+              </div>
+              <div class="vlist" id="evalLog"></div>
+            </div>
+            <div class="card">
+              <div class="card__title">Most-cited videos</div>
+              <div class="vlist" id="evalTop"></div>
+            </div>
+          </div>
+
+          <div class="empty" id="evalEmpty" hidden>
+            <p class="empty__title">No answers logged yet.</p>
+            <p class="empty__body">Ask a few questions on the <b>Ask</b> tab, then come back to see the grounding audit.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- UPLOAD -->
+      <section class="view" id="view-upload">
+        <header class="view__head">
+          <h1 class="view__title">Add your YouTube history</h1>
+          <p class="view__sub">Export "YouTube and YouTube Music → history" from <a href="https://takeout.google.com" target="_blank" rel="noopener">Google Takeout</a> and drop the .zip here. Re-uploading later only adds new videos.</p>
+        </header>
+
+        <div class="card up">
+          <label class="drop" id="drop">
+            <input type="file" id="fileInput" accept=".zip,.html,.json" hidden />
+            <span class="drop__title" id="dropTitle">Choose a Takeout .zip</span>
+            <span class="drop__hint mono" id="dropHint">or drag it onto this box</span>
+          </label>
+
+          <div class="up__actions">
+            <button class="btn btn--primary" id="uploadBtn" type="button" disabled>Import history</button>
+            <span class="up__file mono" id="fileName"></span>
+          </div>
+
+          <div class="progress" id="progress" hidden>
+            <div class="progress__bar"><div class="progress__fill" id="progressFill"></div></div>
+            <div class="progress__meta mono" id="progressText">Starting…</div>
+          </div>
+
+          <div class="result" id="uploadResult" hidden></div>
+        </div>
+      </section>
+
+      <!-- SETTINGS -->
+      <section class="view" id="view-settings">
+        <header class="view__head">
+          <h1 class="view__title">Settings</h1>
+          <p class="view__sub">Your API key is held in memory for this session only — it's never written to disk or sent anywhere except your chosen provider.</p>
+        </header>
+
+        <div class="card set">
+          <div class="set__status">
+            <span class="badge" id="keyBadge">unknown</span>
+            <span class="set__prov mono" id="provText"></span>
+          </div>
+
+          <form id="settingsForm" autocomplete="off">
+            <label class="field">
+              <span class="field__label">API key</span>
+              <input class="field__input" id="apiKey" type="password" placeholder="sk-…" />
+            </label>
+            <div class="set__row">
+              <label class="field">
+                <span class="field__label">Provider</span>
+                <input class="field__input" id="provider" type="text" placeholder="deepseek" />
+              </label>
+              <label class="field">
+                <span class="field__label">Model</span>
+                <input class="field__input" id="model" type="text" placeholder="deepseek-chat" />
+              </label>
+            </div>
+            <label class="field">
+              <span class="field__label">Base URL</span>
+              <input class="field__input" id="baseUrl" type="text" placeholder="https://api.deepseek.com" />
+            </label>
+            <div class="set__actions">
+              <button class="btn btn--primary" id="saveKey" type="submit">Save key</button>
+              <span class="set__msg" id="settingsMsg"></span>
+            </div>
+          </form>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <div class="toast" id="toast" hidden></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
