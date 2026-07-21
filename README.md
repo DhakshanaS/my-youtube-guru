@@ -33,10 +33,15 @@ Built as an AI Engineer portfolio project to demonstrate the full modern LLM-app
 
 Everything runs locally from a single command and is driven from a clean browser UI.
 
-> **Screenshots**
-> -  a grounded answer with cited video sources
-> - the category visualisation
-> - the evaluation / audit page
+## Screenshots
+
+![Grounded answer with cited video sources](docs/chat.png)
+
+![Knowledge base — videos by category](docs/knowledge-base.png)
+
+![Grounding](docs/grounding.png)
+
+![Grounded answer](docs/upload.png)
 
 ---
 
